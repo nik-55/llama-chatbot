@@ -6,100 +6,209 @@
     <title>Chat Bot</title>
     <style>
         body {
-            font-family: Calibri, sans-serif;
-            background-color: #f4f4f4;
+            font-family: 'Arial', sans-serif;
+            background-color: #f9f9f9;
             margin: 0;
             padding: 20px;
-        }
-        
-        h1 {
             color: #333;
         }
-        
-        form {
+
+        h1 {
+            text-align: center;
+            color: #333;
+            font-size: 32px;
             margin-bottom: 20px;
-            padding: 10px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
             background-color: #fff;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
         }
-        
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
+
+        .section {
+            margin-bottom: 30px;
         }
-        
-        input[type="text"],
-        input[type="file"] {
-            width: 100%;
-            padding: 8px;
+
+        .section h2 {
+            font-size: 24px;
+            color: #007bff;
             margin-bottom: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
         }
-        
+
+        .section p {
+            font-size: 16px;
+            color: #555;
+        }
+
+        .button-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
         button {
             background-color: #007bff;
             color: white;
-            padding: 10px 20px;
+            padding: 12px 30px;
             border: none;
-            border-radius: 4px;
+            border-radius: 5px;
             cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
         }
-        
+
         button:hover {
             background-color: #0056b3;
         }
-        
-        #chats {
-            padding: 10px;
-            background-color: #fff;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            white-space: pre-wrap;
+
+        button:disabled {
+            background-color: #aaa;
+            cursor: not-allowed;
         }
 
-        /* Loading spinner style */
-        #loading-spinner {
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #555;
+        }
+
+        input[type="text"], input[type="file"] {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
+        input[type="file"] {
+            padding: 10px;
+        }
+
+        .help-text {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .chat-box {
+            padding: 20px;
+            background-color: #f1f1f1;
+            border-radius: 8px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #333;
+            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .chat-entry {
+            margin-bottom: 20px;
+        }
+
+        .chat-entry b {
+            color: #007bff;
+        }
+
+        .chat-entry p {
+            margin: 5px 0;
+        }
+
+        /* Centering the loading spinner and applying blur effect to the background */
+        #loading-overlay {
             display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        #loading-spinner {
             border: 4px solid #f3f3f3;
             border-radius: 50%;
             border-top: 4px solid #007bff;
             width: 40px;
             height: 40px;
-            animation: spin 2s linear infinite;
-            margin: 20px auto;
+            animation: spin 1.5s linear infinite;
         }
 
+        /* Applying the spin animation */
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        /* Popup modal with blur effect */
+        #popup {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #popup-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            text-align: center;
+        }
+
+        #popup button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        #popup button:hover {
+            background-color: #0056b3;
+        }
+
     </style>
     <script>
         function showLoading() {
-            document.getElementById('loading-spinner').style.display = 'block';
+            document.getElementById('loading-overlay').style.display = 'flex';
         }
-
+        
         function hideLoading() {
-            document.getElementById('loading-spinner').style.display = 'none';
+            document.getElementById('loading-overlay').style.display = 'none';
         }
-
+        
         function getSessionKey() {
             showLoading();
-            fetch('/get-session-key', {
+            fetch('/sessions/', {
                 method: 'GET',
                 credentials: 'include'
             })
             .then(response => response.json())
             .then(data => {
-                alert('New sesssion logged in');
+                showPopup('New session logged in');
                 hideLoading();
             })
             .catch(error => {
-                alert('Error fetching session key:', error);
+                showPopup('Error fetching session key: ' + error);
                 hideLoading();
             });
         }
@@ -111,35 +220,35 @@
             const pdfFile = document.getElementById('pdf-file').files[0];
             formData.append('pdf', pdfFile);
 
-            fetch('/upload-pdf', {
+            fetch('/pdf/upload/', {
                 method: 'POST',
                 body: formData,
                 credentials: 'include'
             })
             .then(response => response.json())
             .then(data => {
-                alert('PDF uploaded');
+                showPopup('PDF uploaded successfully!');
                 hideLoading();
             })
             .catch(error => {
-                alert('Error uploading PDF:', error);
+                showPopup('Error uploading PDF: ' + error);
                 hideLoading();
             });
         }
 
         function processPDF() {
             showLoading();
-            fetch('/process-pdf', {
+            fetch('/pdf/process/', {
                 method: 'GET',
                 credentials: 'include'
             })
             .then(response => response.json())
             .then(data => {
-                alert('PDF Processed');
+                showPopup('PDF processed successfully!');
                 hideLoading();
             })
             .catch(error => {
-                alert('Error processing PDF:', error);
+                showPopup('Error processing PDF: ' + error);
                 hideLoading();
             });
         }
@@ -151,7 +260,7 @@
             showLoading();
             const question = document.getElementById('question').value;
 
-            fetch('/ask-question', {
+            fetch('/question/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -162,39 +271,100 @@
             .then(response => response.json())
             .then(data => {
                 messages.push({ question, response: data.response });
-                document.getElementById('chats').innerHTML = messages.map((message, index) => `<div><b>Question ${parseInt(index)+1}</b><p>${message.question}</p><b>Answer</b><p>${message.response}</p></div>`).join('\n\n\n\n');
+                document.getElementById('chats').innerHTML = messages.map((message, index) => `
+                    <div class="chat-entry">
+                        <b>Question ${index + 1}:</b>
+                        <p>${message.question}</p>
+                        <b>Answer:</b>
+                        <p>${message.response}</p>
+                    </div>
+                `).join('');
                 hideLoading();
             })
             .catch(error => {
-                alert('Error asking question:', error);
+                showPopup('Error asking question: ' + error);
                 hideLoading();
             });
+        }
+
+        function showPopup(message) {
+            const popup = document.getElementById('popup');
+            document.getElementById('popup-message').innerText = message;
+            popup.style.display = 'flex';
+        }
+
+        function hidePopup() {
+            const popup = document.getElementById('popup');
+            popup.style.display = 'none';
         }
     </script>
 </head>
 <body>
-    <h1>Chat Bot</h1>
-    
-    <div id="loading-spinner"></div>
 
-    <button onclick="getSessionKey()" style="margin-bottom: 10px;">New Session</button>
-    
-    <form id="pdf-upload-form" onsubmit="uploadPDF(event)">
-        <label for="pdf-file">Upload PDF:</label>
-        <input type="file" id="pdf-file" name="pdf" accept="application/pdf" required>
-        <button type="submit">Upload PDF</button>
-    </form>
+    <div class="container">
+        <!-- New Session Section -->
+        <div class="section">
+            <h2>Start a New Session</h2>
+            <p>Click the button below to start a new session with the bot. This will allow you to ask questions and interact with the bot.</p>
+            <div class="button-container">
+                <button onclick="getSessionKey()">Start New Session</button>
+            </div>
+        </div>
 
-    <button onclick="processPDF()" style="margin-bottom: 10px;">Process PDF</button>
+        <!-- PDF Upload Section -->
+        <div class="section">
+            <h2>Upload a PDF (Optional)</h2>
+            <p>If you have a PDF file that you'd like to upload, use the form below. The bot will process the PDF and use it to help answer questions.</p>
+            <form id="pdf-upload-form" onsubmit="uploadPDF(event)">
+                <label for="pdf-file">Choose a PDF file:</label>
+                <input type="file" id="pdf-file" name="pdf" accept="application/pdf" required>
+                <div class="help-text">Select a PDF file from your device to upload.</div>
+                <button type="submit">Upload PDF</button>
+            </form>
+        </div>
 
-    <form id="question-form" onsubmit="askQuestion(event)">
-        <label for="question">Ask a Question:</label>
-        <input type="text" id="question" name="question" required>
-        <button type="submit">Submit Question</button>
-    </form>
+        <!-- Process PDF Section -->
+        <div class="section">
+            <h2>Process the PDF</h2>
+            <p>Once you've uploaded a PDF, click the button below to process the file. The bot will analyze it and be ready to answer questions based on the content of the PDF.</p>
+            <div class="button-container">
+                <button onclick="processPDF()">Process PDF</button>
+            </div>
+        </div>
 
-    <h2>Chats:</h2>
-    <p id="chats"></p>
+        <!-- Ask Question Section -->
+        <div class="section">
+            <h2>Ask a Question</h2>
+            <p>Type a question in the input field below and submit it. The bot will answer based on the available data and PDFs uploaded.</p>
+            <form id="question-form" onsubmit="askQuestion(event)">
+                <label for="question">Your Question:</label>
+                <input type="text" id="question" name="question" required>
+                <div class="help-text">Type your question here.</div>
+                <button type="submit">Submit Question</button>
+            </form>
+        </div>
+
+        <!-- Chat History Section -->
+        <div class="section">
+            <h2>Chat History</h2>
+            <p>Here are the questions you've asked and the bot's responses. Review the chat history to see past interactions.</p>
+            <div id="chats" class="chat-box"></div>
+        </div>
+    </div>
+
+    <!-- Loading Spinner -->
+     <div id="loading-overlay">
+    <div id="loading-spinner">
+    </div>
+    </div>
+
+    <!-- Popup modal -->
+    <div id="popup">
+        <div id="popup-content">
+            <p id="popup-message"></p>
+            <button onclick="hidePopup()">Close</button>
+        </div>
+    </div>
 
 </body>
 </html>
